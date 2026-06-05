@@ -328,6 +328,8 @@ function getBounds(placements) {
 
 function render(grid, placements) {
 
+    const numbering = computeNumbering(placements);
+
     solutionGrid = grid;
     placedWords = placements;
 
@@ -357,10 +359,17 @@ function render(grid, placements) {
             const wrapper = document.createElement("div");
             wrapper.className = "cellWrapper";
 
+            const key = `${r},${c}`;
+
+
             // number overlay (optional now, ready for real numbering later)
             const number = document.createElement("div");
             number.className = "number";
-            number.textContent = ""; // we can fill real numbers later
+            if (numbering.has(key)) {
+                number.textContent = numbering.get(key);
+            } else {
+                number.textContent = "";
+            }
 
             // input cell
             const input = document.createElement("input");
@@ -393,6 +402,25 @@ function render(grid, placements) {
 
         clueList.appendChild(li);
     });
+}
+
+function computeNumbering(placements) {
+
+    const map = new Map();
+    let counter = 1;
+
+    const starts = new Map();
+
+    for (const p of placements) {
+
+        const key = `${p.row},${p.col}`;
+
+        if (!starts.has(key)) {
+            starts.set(key, counter++);
+        }
+    }
+
+    return starts;
 }
 
 function checkAll() {
