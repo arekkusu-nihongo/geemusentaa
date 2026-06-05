@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Japanese Crossword</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h1>Japanese Crossword</h1>
+
+<div class="controls">
+
+<select id="mode">
+<option value="romaji">Romaji</option>
+<option value="hiragana">Hiragana</option>
+</select>
+
+<button id="generateBtn">
+Generate Crossword
+</button>
+
+<button id="checkBtn">
+Check All
+</button>
+
+<button id="revealAllBtn">
+Reveal Puzzle
+</button>
+
+</div>
+
+<div id="crossword"></div>
+
+<div id="clues">
+<h2>Clues</h2>
+<ol id="clueList"></ol>
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>

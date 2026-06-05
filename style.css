@@ -1,0 +1,42 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+.controls {
+    margin-bottom: 20px;
+}
+
+#crossword {
+    display: inline-block;
+}
+
+.row {
+    display: flex;
+}
+
+.cell {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #888;
+    text-align: center;
+    font-size: 18px;
+}
+
+.block {
+    width: 34px;
+    height: 34px;
+    background: #333;
+}
+
+.correct {
+    background: #b8ffb8;
+}
+
+.wrong {
+    background: #ffb8b8;
+}
+
+#clues {
+    margin-top: 30px;
+}
