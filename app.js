@@ -345,6 +345,7 @@ function render(grid, placements) {
 
             const value = grid[r][c];
 
+            // BLACK CELL
             if (value === null) {
                 const block = document.createElement("div");
                 block.className = "block";
@@ -352,9 +353,16 @@ function render(grid, placements) {
                 continue;
             }
 
+            // WHITE CELL WRAPPER (crossword cell)
             const wrapper = document.createElement("div");
             wrapper.className = "cellWrapper";
 
+            // number overlay (optional now, ready for real numbering later)
+            const number = document.createElement("div");
+            number.className = "number";
+            number.textContent = ""; // we can fill real numbers later
+
+            // input cell
             const input = document.createElement("input");
             input.className = "cell";
             input.maxLength = 1;
@@ -362,21 +370,27 @@ function render(grid, placements) {
             input.dataset.row = r;
             input.dataset.col = c;
 
+            wrapper.appendChild(number);
             wrapper.appendChild(input);
+
             rowDiv.appendChild(wrapper);
         }
 
         container.appendChild(rowDiv);
     }
 
-    // clues
+    // ======================
+    // CLUES
+    // ======================
     const clueList = document.getElementById("clueList");
     clueList.innerHTML = "";
 
     placements.forEach((p, i) => {
 
         const li = document.createElement("li");
+
         li.textContent = `${i + 1}. ${p.french}`;
+
         clueList.appendChild(li);
     });
 }
