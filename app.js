@@ -50,48 +50,63 @@ function createEmptyGrid() {
     );
 }
 
-function canPlace(
-    grid,
-    word,
-    row,
-    col,
-    direction
-) {
+function inBounds(r, c) {
+    return r >= 0 && r < SIZE && c >= 0 && c < SIZE;
+}
+
+function canPlace(grid, word, row, col, direction) {
 
     const chars = [...word];
 
-    for (
-        let i = 0;
-        i < chars.length;
-        i++
-    ) {
+    for (let i = 0; i < chars.length; i++) {
 
-        let r =
-            direction === "across"
-            ? row
-            : row + i;
+        const r = direction === "across" ? row : row + i;
+        const c = direction === "across" ? col + i : col;
 
-        let c =
-            direction === "across"
-            ? col + i
-            : col;
+        if (!inBounds(r, c)) return false;
 
-        if (
-            r < 0 ||
-            r >= SIZE ||
-            c < 0 ||
-            c >= SIZE
-        ) {
+        const existing = grid[r][c];
+
+        if (existing !== null && existing !== chars[i]) {
             return false;
         }
 
-        if (
-            grid[r][c] !== null &&
-            grid[r][c] !== chars[i]
-        ) {
-            return false;
+        // adjacency rules (NO touching except valid crossing)
+        const isCrossing = existing === chars[i];
+
+        if (!isCrossing) {
+
+            if (direction === "across") {
+
+                // above / below must be empty
+                if (inBounds(r - 1, c) && grid[r - 1][c] !== null) return false;
+                if (inBounds(r + 1, c) && grid[r + 1][c] !== null) return false;
+            }
+
+            if (direction === "down") {
+
+                // left / right must be empty
+                if (inBounds(r, c - 1) && grid[r][c - 1] !== null) return false;
+                if (inBounds(r, c + 1) && grid[r][c + 1] !== null) return false;
+            }
         }
     }
+
+    // prevent touching at word ends
+    const beforeR = direction === "down" ? row - 1 : row;
+    const beforeC = direction === "across" ? col - 1 : col;
+
+    const afterR =
+        direction === "down" ? row + chars.length : row;
+
+    const afterC =
+        direction === "across" ? col + chars.length : col;
+
+    if (inBounds(beforeR, beforeC) && grid[beforeR][beforeC] !== null)
+        return false;
+
+    if (inBounds(afterR, afterC) && grid[afterR][afterC] !== null)
+        return false;
 
     return true;
 }
@@ -287,119 +302,83 @@ function generateCrossword(words) {
     };
 }
 
-function render(
-    grid,
-    placements
-) {
+function getBounds(placements) {
 
-    solutionGrid =
-        grid;
+    let minR = 999, minC = 999;
+    let maxR = -999, maxC = -999;
 
-    placedWords =
-        placements;
+    placements.forEach(p => {
 
-    const container =
-        document.getElementById(
-            "crossword"
-        );
+        const chars = [...p.answer];
 
-    container.innerHTML =
-        "";
+        for (let i = 0; i < chars.length; i++) {
 
-    for (
-        let r = 0;
-        r < SIZE;
-        r++
-    ) {
+            const r = p.direction === "across" ? p.row : p.row + i;
+            const c = p.direction === "across" ? p.col + i : p.col;
 
-        const rowDiv =
-            document.createElement(
-                "div"
-            );
+            minR = Math.min(minR, r);
+            minC = Math.min(minC, c);
+            maxR = Math.max(maxR, r);
+            maxC = Math.max(maxC, c);
+        }
+    });
 
-        rowDiv.className =
-            "row";
+    return { minR, maxR, minC, maxC };
+}
 
-        for (
-            let c = 0;
-            c < SIZE;
-            c++
-        ) {
+function render(grid, placements) {
 
-            if (
-                grid[r][c]
-                === null
-            ) {
+    solutionGrid = grid;
+    placedWords = placements;
 
-                const block =
-                    document
-                    .createElement(
-                        "div"
-                    );
+    const { minR, maxR, minC, maxC } = getBounds(placements);
 
-                block.className =
-                    "block";
+    const container = document.getElementById("crossword");
+    container.innerHTML = "";
 
-                rowDiv.appendChild(
-                    block
-                );
+    for (let r = minR; r <= maxR; r++) {
 
+        const rowDiv = document.createElement("div");
+        rowDiv.className = "row";
+
+        for (let c = minC; c <= maxC; c++) {
+
+            const value = grid[r][c];
+
+            if (value === null) {
+                const block = document.createElement("div");
+                block.className = "block";
+                rowDiv.appendChild(block);
                 continue;
             }
 
-            const input =
-                document
-                .createElement(
-                    "input"
-                );
+            const wrapper = document.createElement("div");
+            wrapper.className = "cellWrapper";
 
-            input.className =
-                "cell";
+            const input = document.createElement("input");
+            input.className = "cell";
+            input.maxLength = 1;
 
-            input.dataset.row =
-                r;
+            input.dataset.row = r;
+            input.dataset.col = c;
 
-            input.dataset.col =
-                c;
-
-            input.maxLength =
-                1;
-
-            rowDiv.appendChild(
-                input
-            );
+            wrapper.appendChild(input);
+            rowDiv.appendChild(wrapper);
         }
 
-        container.appendChild(
-            rowDiv
-        );
+        container.appendChild(rowDiv);
     }
 
-    const clueList =
-        document.getElementById(
-            "clueList"
-        );
+    // clues
+    const clueList = document.getElementById("clueList");
+    clueList.innerHTML = "";
 
-    clueList.innerHTML =
-        "";
+    placements.forEach((p, i) => {
 
-    placements.forEach(
-        (p,index) => {
-
-            const li =
-                document
-                .createElement(
-                    "li"
-                );
-
-            li.textContent =
-                p.french;
-
-            clueList.appendChild(
-                li
-            );
-        }
-    );
+        const li = document.createElement("li");
+        li.textContent = `${i + 1}. ${p.french}`;
+        clueList.appendChild(li);
+    });
 }
 
 function checkAll() {
