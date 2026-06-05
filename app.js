@@ -366,7 +366,11 @@ function render(grid, placements) {
             const number = document.createElement("div");
             number.className = "number";
             if (numbering.has(key)) {
-                number.textContent = numbering.get(key);
+
+            const info = numbering.get(key);
+
+            number.innerHTML =
+                `${info.number}${info.across ? "→" : ""}${info.down ? "↓" : ""}`;
             } else {
                 number.textContent = "";
             }
@@ -395,6 +399,7 @@ function render(grid, placements) {
     clueList.innerHTML = "";
 
     placements.forEach((p, i) => {
+        console.log("RAW CLUE:", p.french);
 
         const li = document.createElement("li");
 
@@ -407,20 +412,45 @@ function render(grid, placements) {
 function computeNumbering(placements) {
 
     const map = new Map();
+    const details = new Map();
     let counter = 1;
 
-    const starts = new Map();
+    function key(r, c) {
+        return `${r},${c}`;
+    }
 
     for (const p of placements) {
 
-        const key = `${p.row},${p.col}`;
+        const r = p.row;
+        const c = p.col;
+        const k = key(r, c);
 
-        if (!starts.has(key)) {
-            starts.set(key, counter++);
+        let existing = details.get(k);
+
+        if (!existing) {
+            existing = { across: false, down: false };
+        }
+
+        existing[p.direction] = true;
+
+        details.set(k, existing);
+    }
+
+    for (const [k, val] of details.entries()) {
+
+        const hasAcross = val.across;
+        const hasDown = val.down;
+
+        if (hasAcross || hasDown) {
+            map.set(k, {
+                number: counter++,
+                across: hasAcross,
+                down: hasDown
+            });
         }
     }
 
-    return starts;
+    return map;
 }
 
 function checkAll() {
