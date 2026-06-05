@@ -399,11 +399,14 @@ function render(grid, placements) {
     clueList.innerHTML = "";
 
     placements.forEach((p, i) => {
-        console.log("RAW CLUE:", p.french);
 
         const li = document.createElement("li");
 
-        li.textContent = `${i + 1}. ${p.french}`;
+        const text = `${i + 1}. ${p.french}`;
+
+        console.log("CLUE FINAL:", text);
+
+        li.textContent = text;
 
         clueList.appendChild(li);
     });
