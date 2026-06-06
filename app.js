@@ -4,6 +4,7 @@ let solutionGrid = [];
 let placedWords = [];
 
 let activeDirection = "across"; // default
+let focusedCell = null;
 
 
 document
@@ -17,6 +18,28 @@ document
 document
     .getElementById("revealAllBtn")
     .addEventListener("click", revealAll);
+
+document
+    .getElementById("checkLetterBtn")
+    .addEventListener("click", () => {
+        if (!focusedCell) return;
+        checkLetter(
+            Number(focusedCell.dataset.row),
+            Number(focusedCell.dataset.col)
+        );
+    });
+
+document
+    .getElementById("checkWordBtn")
+    .addEventListener("click", checkWord);
+
+document
+    .getElementById("revealLetterBtn")
+    .addEventListener("click", revealLetter);
+
+document
+    .getElementById("revealWordBtn")
+    .addEventListener("click", revealWord);
 
 async function loadVocabulary() {
 
@@ -371,6 +394,102 @@ function moveNext(r, c, direction) {
     if (next) next.focus();
 }
 
+function getWordCells(r, c, direction) {
+    const cells = [];
+
+    if (direction === "across") {
+        let cc = c;
+
+        // go left to start
+        while (inBounds(r, cc - 1) && solutionGrid[r][cc - 1] !== null) {
+            cc--;
+        }
+
+        // collect right
+        while (inBounds(r, cc) && solutionGrid[r][cc] !== null) {
+            cells.push({ r, c: cc });
+            cc++;
+        }
+    }
+
+    if (direction === "down") {
+        let rr = r;
+
+        while (inBounds(rr - 1, c) && solutionGrid[rr - 1][c] !== null) {
+            rr--;
+        }
+
+        while (inBounds(rr, c) && solutionGrid[rr][c] !== null) {
+            cells.push({ r: rr, c });
+            rr++;
+        }
+    }
+
+    return cells;
+}
+
+function checkLetter(r, c) {
+    const cell = document.querySelector(
+        `.cell[data-row="${r}"][data-col="${c}"]`
+    );
+
+    const solution = solutionGrid[r][c];
+
+    const user = (cell.value || "").toUpperCase();
+    const target = (solution || "").toUpperCase();
+
+    cell.classList.remove("correct", "wrong");
+
+    if (user === target) {
+        cell.classList.add("correct");
+    } else {
+        cell.classList.add("wrong");
+    }
+}
+
+function revealLetter() {
+    if (!focusedCell) return;
+
+    const r = Number(focusedCell.dataset.row);
+    const c = Number(focusedCell.dataset.col);
+
+    focusedCell.value = (solutionGrid[r][c] || "").toUpperCase();
+    focusedCell.classList.add("correct");
+}
+
+function checkWord() {
+    if (!focusedCell) return;
+
+    const r = Number(focusedCell.dataset.row);
+    const c = Number(focusedCell.dataset.col);
+
+    const dir = activeDirection;
+
+    const cells = getWordCells(r, c, dir);
+
+    cells.forEach(({ r, c }) => {
+        checkLetter(r, c);
+    });
+}
+
+function revealWord() {
+    if (!focusedCell) return;
+
+    const r = Number(focusedCell.dataset.row);
+    const c = Number(focusedCell.dataset.col);
+
+    const cells = getWordCells(r, c, activeDirection);
+
+    cells.forEach(({ r, c }) => {
+        const cell = document.querySelector(
+            `.cell[data-row="${r}"][data-col="${c}"]`
+        );
+
+        cell.value = (solutionGrid[r][c] || "").toUpperCase();
+        cell.classList.add("correct");
+    });
+}
+
 function render(grid, placements) {
 
     solutionGrid = grid;
@@ -425,10 +544,12 @@ function render(grid, placements) {
 
             input.addEventListener("focus", () => {
                 activeDirection = detectDirection(r, c);
+                focusedCell = input;
             });
 
             input.addEventListener("input", (e) => {
                 if (!e.target.value) return;
+                e.target.value = e.target.value.toUpperCase();
                 moveNext(r, c, activeDirection);
             });
 
