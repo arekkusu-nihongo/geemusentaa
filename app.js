@@ -462,10 +462,10 @@ function checkAll() {
             const solution =
                 solutionGrid[r][c];
 
-            if (
-                cell.value
-                === solution
-            ) {
+            const user = (cell.value || "").toUpperCase();
+            const target = (solution || "").toUpperCase();
+
+            if (user === target) {
 
                 cell.classList
                     .remove("wrong");
