@@ -5,7 +5,9 @@ let placedWords = [];
 
 let activeDirection = "across"; // default
 let focusedCell = null;
-
+let selectedCell = null;
+let selectedCells = [];
+let lastClicked = null;
 
 document
     .getElementById("generateBtn")
@@ -352,6 +354,48 @@ function getBounds(placements) {
     return { minR, maxR, minC, maxC };
 }
 
+
+
+function getWordCellsFromPlacement(p) {
+    const cells = [];
+
+    const chars = [...p.answer];
+
+    for (let i = 0; i < chars.length; i++) {
+        const r = p.direction === "across" ? p.row : p.row + i;
+        const c = p.direction === "across" ? p.col + i : p.col;
+        cells.push({ r, c });
+    }
+
+    return cells;
+}
+
+function getWordsAtCell(r, c) {
+    return placedWords.filter(p => {
+        const cells = getWordCellsFromPlacement(p);
+        return cells.some(cell => cell.r === r && cell.c === c);
+    });
+}
+
+function clearHighlight() {
+    document.querySelectorAll(".cell").forEach(cell => {
+        cell.classList.remove("active");
+    });
+}
+
+function highlightCells(cells) {
+    clearHighlight();
+
+    selectedCells = cells;
+
+    cells.forEach(({ r, c }) => {
+        const el = document.querySelector(
+            `.cell[data-row="${r}"][data-col="${c}"]`
+        );
+        if (el) el.classList.add("active");
+    });
+}
+
 function detectDirection(r, c) {
 
     let hasAcross = false;
@@ -543,7 +587,11 @@ function render(grid, placements) {
             input.dataset.col = c;
 
             input.addEventListener("focus", () => {
-                activeDirection = detectDirection(r, c);
+                focusedCell = input;
+            });
+
+            input.addEventListener("click", () => {
+                handleCellClick(r, c, input);
                 focusedCell = input;
             });
 
@@ -575,6 +623,39 @@ function render(grid, placements) {
             li.textContent = `${p.number}. ${dir} ${p.french}`;
             clueList.appendChild(li);
         });
+}
+
+function handleCellClick(r, c, input) {
+
+    const words = getWordsAtCell(r, c);
+    if (words.length === 0) return;
+
+    const isSameCell =
+        lastClicked &&
+        lastClicked.r === r &&
+        lastClicked.c === c;
+
+    // choose possible directions
+    const hasAcross = words.some(w => w.direction === "across");
+    const hasDown = words.some(w => w.direction === "down");
+
+    if (isSameCell) {
+        // toggle ONLY if both exist
+        if (hasAcross && hasDown) {
+            activeDirection =
+                activeDirection === "across"
+                    ? "down"
+                    : "across";
+        }
+    } else {
+        // first click: prefer across first (more natural UX)
+        activeDirection = hasAcross ? "across" : "down";
+    }
+
+    lastClicked = { r, c };
+
+    const cells = getWordCells(r, c, activeDirection);
+    highlightCells(cells);
 }
 
 function computeNumbering(placements, minR, minC) {
