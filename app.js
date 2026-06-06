@@ -328,12 +328,21 @@ function getBounds(placements) {
 
 function render(grid, placements) {
 
-    const numbering = computeNumbering(placements);
-
     solutionGrid = grid;
     placedWords = placements;
 
     const { minR, maxR, minC, maxC } = getBounds(placements);
+
+    // IMPORTANT: compute numbering AFTER bounds exist
+    const numbering = computeNumbering(placements, minR, minC);
+
+    // attach numbers back to placements
+    placements.forEach(p => {
+
+        const key = `${p.row - minR},${p.col - minC}`;
+
+        p.number = numbering.get(key);
+    });
 
     const container = document.getElementById("crossword");
     container.innerHTML = "";
@@ -347,7 +356,6 @@ function render(grid, placements) {
 
             const value = grid[r][c];
 
-            // BLACK CELL
             if (value === null) {
                 const block = document.createElement("div");
                 block.className = "block";
@@ -355,27 +363,20 @@ function render(grid, placements) {
                 continue;
             }
 
-            // WHITE CELL WRAPPER (crossword cell)
             const wrapper = document.createElement("div");
             wrapper.className = "cellWrapper";
 
-            const key = `${r},${c}`;
+            const key = `${r - minR},${c - minC}`;
 
-
-            // number overlay (optional now, ready for real numbering later)
             const number = document.createElement("div");
             number.className = "number";
+
             if (numbering.has(key)) {
-
-            const info = numbering.get(key);
-
-            number.innerHTML =
-                `${info.number}${info.across ? "→" : ""}${info.down ? "↓" : ""}`;
+                number.textContent = numbering.get(key);
             } else {
                 number.textContent = "";
             }
 
-            // input cell
             const input = document.createElement("input");
             input.className = "cell";
             input.maxLength = 1;
@@ -398,62 +399,46 @@ function render(grid, placements) {
     const clueList = document.getElementById("clueList");
     clueList.innerHTML = "";
 
-    placements.forEach((p, i) => {
+    placements
+        .slice()
+        .sort((a, b) => a.number - b.number)
+        .forEach(p => {
 
-        const li = document.createElement("li");
+            const li = document.createElement("li");
 
-        const text = `${i + 1}. ${p.french}`;
+            const dir = p.direction === "across" ? "→" : "↓";
 
-        console.log("CLUE FINAL:", text);
+            li.textContent = `${p.number}. ${dir} ${p.french}`;
 
-        li.textContent = text;
-
-        clueList.appendChild(li);
-    });
+            clueList.appendChild(li);
+        });
 }
 
-function computeNumbering(placements) {
+function computeNumbering(placements, minR, minC) {
 
     const map = new Map();
-    const details = new Map();
     let counter = 1;
 
-    function key(r, c) {
-        return `${r},${c}`;
-    }
+    const starts = new Set();
 
     for (const p of placements) {
 
-        const r = p.row;
-        const c = p.col;
-        const k = key(r, c);
+        const r = p.row - minR;
+        const c = p.col - minC;
 
-        let existing = details.get(k);
+        const key = `${r},${c}`;
 
-        if (!existing) {
-            existing = { across: false, down: false };
-        }
-
-        existing[p.direction] = true;
-
-        details.set(k, existing);
-    }
-
-    for (const [k, val] of details.entries()) {
-
-        const hasAcross = val.across;
-        const hasDown = val.down;
-
-        if (hasAcross || hasDown) {
-            map.set(k, {
-                number: counter++,
-                across: hasAcross,
-                down: hasDown
-            });
+        if (!starts.has(key)) {
+            starts.add(key);
+            map.set(key, counter++);
         }
     }
 
     return map;
+}
+
+function toKey(r, c) {
+    return `${r},${c}`;
 }
 
 function checkAll() {
