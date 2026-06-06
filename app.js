@@ -586,8 +586,15 @@ function render(grid, placements) {
             input.dataset.row = r;
             input.dataset.col = c;
 
-            input.addEventListener("focus", () => {
+            input.addEventListener("focus", (e) => {
                 focusedCell = input;
+
+                // highlight whole word instead of caret
+                const r = Number(input.dataset.row);
+                const c = Number(input.dataset.col);
+
+                const cells = getWordCells(r, c, activeDirection);
+                highlightCells(cells);
             });
 
             input.addEventListener("click", () => {
@@ -595,12 +602,19 @@ function render(grid, placements) {
                 focusedCell = input;
             });
 
-            input.addEventListener("input", (e) => {
-                if (!e.target.value) return;
-                e.target.value = e.target.value.toUpperCase();
-                moveNext(r, c, activeDirection);
-            });
+            input.addEventListener("beforeinput", (e) => {
+                if (e.inputType && e.inputType.startsWith("insert")) {
+                    e.preventDefault();
 
+                    const key = e.data;
+
+                    if (!key) return;
+
+                    e.target.value = key.toUpperCase();
+
+                    moveNext(r, c, activeDirection);
+                }
+            });
             wrapper.appendChild(number);
             wrapper.appendChild(input);
             rowDiv.appendChild(wrapper);
