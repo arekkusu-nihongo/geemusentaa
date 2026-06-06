@@ -3,6 +3,9 @@ const SIZE = 20;
 let solutionGrid = [];
 let placedWords = [];
 
+let activeDirection = "across"; // default
+
+
 document
     .getElementById("generateBtn")
     .addEventListener("click", generate);
@@ -326,6 +329,48 @@ function getBounds(placements) {
     return { minR, maxR, minC, maxC };
 }
 
+function detectDirection(r, c) {
+
+    let hasAcross = false;
+    let hasDown = false;
+
+    for (const p of placedWords) {
+
+        const chars = [...p.answer];
+
+        for (let i = 0; i < chars.length; i++) {
+
+            const rr = p.direction === "across" ? p.row : p.row + i;
+            const cc = p.direction === "across" ? p.col + i : p.col;
+
+            if (rr === r && cc === c) {
+                if (p.direction === "across") hasAcross = true;
+                if (p.direction === "down") hasDown = true;
+            }
+        }
+    }
+
+    // if both exist, keep last direction (feels like real crosswords)
+    if (hasAcross && hasDown) return activeDirection;
+
+    return hasAcross ? "across" : "down";
+}
+
+function moveNext(r, c, direction) {
+
+    let nextR = r;
+    let nextC = c;
+
+    if (direction === "across") nextC++;
+    if (direction === "down") nextR++;
+
+    const next = document.querySelector(
+        `.cell[data-row="${nextR}"][data-col="${nextC}"]`
+    );
+
+    if (next) next.focus();
+}
+
 function render(grid, placements) {
 
     solutionGrid = grid;
@@ -333,14 +378,10 @@ function render(grid, placements) {
 
     const { minR, maxR, minC, maxC } = getBounds(placements);
 
-    // IMPORTANT: compute numbering AFTER bounds exist
     const numbering = computeNumbering(placements, minR, minC);
 
-    // attach numbers back to placements
     placements.forEach(p => {
-
         const key = `${p.row - minR},${p.col - minC}`;
-
         p.number = numbering.get(key);
     });
 
@@ -373,8 +414,6 @@ function render(grid, placements) {
 
             if (numbering.has(key)) {
                 number.textContent = numbering.get(key);
-            } else {
-                number.textContent = "";
             }
 
             const input = document.createElement("input");
@@ -384,18 +423,23 @@ function render(grid, placements) {
             input.dataset.row = r;
             input.dataset.col = c;
 
+            input.addEventListener("focus", () => {
+                activeDirection = detectDirection(r, c);
+            });
+
+            input.addEventListener("input", (e) => {
+                if (!e.target.value) return;
+                moveNext(r, c, activeDirection);
+            });
+
             wrapper.appendChild(number);
             wrapper.appendChild(input);
-
             rowDiv.appendChild(wrapper);
         }
 
         container.appendChild(rowDiv);
     }
 
-    // ======================
-    // CLUES
-    // ======================
     const clueList = document.getElementById("clueList");
     clueList.innerHTML = "";
 
@@ -405,11 +449,9 @@ function render(grid, placements) {
         .forEach(p => {
 
             const li = document.createElement("li");
-
             const dir = p.direction === "across" ? "→" : "↓";
 
             li.textContent = `${p.number}. ${dir} ${p.french}`;
-
             clueList.appendChild(li);
         });
 }
