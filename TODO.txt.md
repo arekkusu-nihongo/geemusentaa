@@ -85,3 +85,10 @@ while still remaining deployable as a static GitHub Pages site.
 - [ ] Reveal letter / word cooldown or limit (optional game mode)
 - [ ] Track completion progress
 - [ ] Add win detection (all cells correct)
+
+Other ideas:
+### Track words that have been answered -> show them less often
+okok I will add an ID field so that we can keep count per ID (in case word ever change etc, less breakable).
+We should add a button to clear cache from page (reset word tracker).
+We should add count only if user is able to translate the word I think.
+Maybe we should show the user what words he saw the most? Meh, feels unnecessary.
