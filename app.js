@@ -43,36 +43,95 @@ document
     .getElementById("revealWordBtn")
     .addEventListener("click", revealWord);
 
+async function getRuntimeKey() {
+    return crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode("Some*(#@OtherRuntime@(*)#@(KEY2Decrypt!@)*1224[]';)")
+    );
+}
+
+async function decryptRuntimeFile(buffer) {
+
+    const rawKey =
+        await getRuntimeKey();
+
+    const key =
+        await crypto.subtle.importKey(
+            "raw",
+            rawKey,
+            "AES-GCM",
+            false,
+            ["decrypt"]
+        );
+
+    const nonce =
+        buffer.slice(0, 12);
+
+    const encrypted =
+        buffer.slice(12);
+
+    const decrypted =
+        await crypto.subtle.decrypt(
+            {
+                name: "AES-GCM",
+                iv: nonce
+            },
+            key,
+            encrypted
+        );
+
+    return new TextDecoder()
+        .decode(decrypted);
+}
+
 async function loadVocabulary() {
 
     const response =
-        await fetch("vocab.tsv");
+        await fetch(
+            "vocab.runtime.enc"
+        );
+
+    const buffer =
+        await response.arrayBuffer();
 
     const text =
-        await response.text();
+        await decryptRuntimeFile(
+            buffer
+        );
 
-    return text
-        .trim()
-        .split("\n")
-        .map(line => {
-
-            const [
-                french,
-                romaji,
-                hiragana,
-                comment = "",
-                example = ""
-            ] = line.split("\t");
-
-            return {
-                french,
-                romaji,
-                hiragana,
-                comment,
-                example
-            };
-        });
+    return JSON.parse(text);
 }
+
+// async function loadVocabulary() {
+
+//     const response =
+//         await fetch("vocab.tsv");
+
+//     const text =
+//         await response.text();
+
+//     return text
+//         .trim()
+//         .split("\n")
+//         .map(line => {
+
+//             const [
+//                 french,
+//                 romaji,
+//                 hiragana,
+//                 comment = "",
+//                 example = ""
+//             ] = line.split("\t");
+
+//             return {
+//                 french,
+//                 romaji,
+//                 hiragana,
+//                 comment,
+//                 example
+//             };
+//         });
+// }
 
 function createEmptyGrid() {
 
