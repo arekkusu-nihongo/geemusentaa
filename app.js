@@ -102,6 +102,24 @@ async function loadVocabulary() {
     return JSON.parse(text);
 }
 
+async function getFilteredVocab() {
+
+    const includeKnown =
+        document.getElementById(
+            "includeKnownWords"
+        ).checked;
+    
+    allVocab = await loadVocabulary()
+
+    if (includeKnown) {
+        return allVocab;
+    }
+
+    return allVocab.filter(
+        word => word.should_study
+    );
+}
+
 // async function loadVocabulary() {
 
 //     const response =
@@ -919,8 +937,8 @@ function revealAll() {
 
 async function generate() {
 
-    const vocab =
-        await loadVocabulary();
+    const vocab = 
+        await getFilteredVocab()
 
     const mode =
         document
@@ -945,7 +963,8 @@ async function generate() {
                 mode === "romaji"
                 ? v.romaji
                     .toUpperCase()
-                : v.hiragana
+                : v.hiragana,
+            should_study: v.should_study
         }));
 
     const crossword =
