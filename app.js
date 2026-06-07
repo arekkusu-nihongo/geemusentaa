@@ -59,13 +59,17 @@ async function loadVocabulary() {
             const [
                 french,
                 romaji,
-                hiragana
+                hiragana,
+                comment = "",
+                example = ""
             ] = line.split("\t");
 
             return {
                 french,
                 romaji,
-                hiragana
+                hiragana,
+                comment,
+                example
             };
         });
 }
@@ -632,9 +636,96 @@ function render(grid, placements) {
         .forEach(p => {
 
             const li = document.createElement("li");
-            const dir = p.direction === "across" ? "→" : "↓";
 
-            li.textContent = `${p.number}. ${dir} ${p.french}`;
+            const dir =
+                p.direction === "across"
+                    ? "→"
+                    : "↓";
+
+            const clueText =
+                document.createElement("div");
+
+            clueText.textContent =
+                `${p.number}. ${dir} ${p.french}`;
+
+            li.appendChild(clueText);
+
+            if (p.comment?.trim()) {
+
+                const btn =
+                    document.createElement("button");
+
+                btn.textContent =
+                    "Show comment";
+
+                const content =
+                    document.createElement("div");
+
+                content.className =
+                    "extraInfo";
+
+                content.style.display =
+                    "none";
+
+                content.textContent =
+                    p.comment;
+
+                btn.addEventListener("click", () => {
+
+                    const visible =
+                        content.style.display !== "none";
+
+                    content.style.display =
+                        visible ? "none" : "block";
+
+                    btn.textContent =
+                        visible
+                            ? "Show comment"
+                            : "Hide comment";
+                });
+
+                li.appendChild(btn);
+                li.appendChild(content);
+            }
+
+            if (p.example?.trim()) {
+
+                const btn =
+                    document.createElement("button");
+
+                btn.textContent =
+                    "Show example";
+
+                const content =
+                    document.createElement("div");
+
+                content.className =
+                    "extraInfo";
+
+                content.style.display =
+                    "none";
+
+                content.textContent =
+                    p.example;
+
+                btn.addEventListener("click", () => {
+
+                    const visible =
+                        content.style.display !== "none";
+
+                    content.style.display =
+                        visible ? "none" : "block";
+
+                    btn.textContent =
+                        visible
+                            ? "Show example"
+                            : "Hide example";
+                });
+
+                li.appendChild(btn);
+                li.appendChild(content);
+            }
+
             clueList.appendChild(li);
         });
 }
@@ -787,12 +878,10 @@ async function generate() {
         )
         .slice(0,10)
         .map(v => ({
-            clue:
-                v.french,
-
-            french:
-                v.french,
-
+            clue: v.french,
+            french: v.french,
+            comment: v.comment,
+            example: v.example,
             answer:
                 mode === "romaji"
                 ? v.romaji

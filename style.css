@@ -75,3 +75,23 @@ body {
 .cell:focus {
     outline: 2px solid #4a90e2;
 }
+
+#clueList li {
+    margin-bottom: 12px;
+}
+
+#clueList button {
+    margin-top: 4px;
+    margin-right: 8px;
+}
+
+.extraInfo {
+    margin-top: 6px;
+    padding: 8px;
+    border-radius: 6px;
+    background: #f0f0f0;
+
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
