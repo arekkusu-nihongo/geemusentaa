@@ -953,7 +953,7 @@ async function generate() {
         .sort(
             ()=>Math.random()-0.5
         )
-        .slice(0,10)
+        .slice(0,80)
         .map(v => ({
             clue: v.french,
             french: v.french,

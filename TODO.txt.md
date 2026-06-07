@@ -92,3 +92,8 @@ okok I will add an ID field so that we can keep count per ID (in case word ever 
 We should add a button to clear cache from page (reset word tracker).
 We should add count only if user is able to translate the word I think.
 Maybe we should show the user what words he saw the most? Meh, feels unnecessary.
+
+
+### Afficher les mots en francais sur la droite quand on selectionne une rangée/colonne
+Pour éviter de devoir scroll.
+
