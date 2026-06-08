@@ -688,22 +688,16 @@ function render(grid, placements) {
                 focusedCell = input;
             });
 
-            let justCommitted = false;
-
+            input.maxLength = 1;
             input.addEventListener("input", (e) => {
 
-                const chars = [...e.target.value];
-
-                if (chars.length <= 1) {
+                if (!e.target.value) {
                     return;
                 }
 
-                const last = chars[chars.length - 1];
-
-                e.target.value = last;
-
                 moveNext(r, c, activeDirection);
             });
+
             input.addEventListener("keydown", (e) => {
 
                 if (e.key !== "Backspace") {
