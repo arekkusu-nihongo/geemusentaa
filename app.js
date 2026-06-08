@@ -3,6 +3,18 @@ const SIZE = 20;
 let solutionGrid = [];
 let placedWords = [];
 
+const failedWords =
+    new Set();
+
+const solvedWords =
+    new Set();
+
+const revealedWords =
+    new Set();
+
+const revealedLetters =
+    new Set();
+
 let activeDirection = "across"; // default
 let focusedCell = null;
 let selectedCell = null;
@@ -42,6 +54,36 @@ document
 document
     .getElementById("revealWordBtn")
     .addEventListener("click", revealWord);
+
+document
+    .getElementById("statsBtn")
+    .addEventListener(
+        "click",
+        showStats
+    );
+
+document
+    .getElementById("clearStatsBtn")
+    .addEventListener("click", clearStats);
+
+function clearStats() {
+
+    if (
+        !confirm(
+            "Delete all learning statistics?"
+        )
+    ) {
+        return;
+    }
+
+    localStorage.removeItem(
+        "wordStats"
+    );
+
+    alert(
+        "Statistics cleared."
+    );
+}
 
 async function getRuntimeKey() {
     return crypto.subtle.digest(
@@ -554,6 +596,7 @@ function getWordCells(r, c, direction) {
 }
 
 function checkLetter(r, c) {
+
     const cell = document.querySelector(
         `.cell[data-row="${r}"][data-col="${c}"]`
     );
@@ -569,6 +612,12 @@ function checkLetter(r, c) {
         cell.classList.add("correct");
     } else {
         cell.classList.add("wrong");
+
+        const words = getWordsAtCell(r, c);
+
+        words.forEach(word => {
+            markFailed(word.id);
+        });
     }
 }
 
@@ -577,6 +626,12 @@ function revealLetter() {
 
     const r = Number(focusedCell.dataset.row);
     const c = Number(focusedCell.dataset.col);
+
+    const words = getWordsAtCell(r, c);
+
+    words.forEach(word => {
+        incrementStat(word.id, "revealLetter");
+    });
 
     focusedCell.value = (solutionGrid[r][c] || "").toUpperCase();
     focusedCell.classList.add("correct");
@@ -592,8 +647,47 @@ function checkWord() {
 
     const cells = getWordCells(r, c, dir);
 
+    let allCorrect = true;
+
     cells.forEach(({ r, c }) => {
         checkLetter(r, c);
+
+        const cell = document.querySelector(
+            `.cell[data-row="${r}"][data-col="${c}"]`
+        );
+
+        const user =
+            (cell.value || "").toUpperCase();
+
+        const target =
+            (solutionGrid[r][c] || "").toUpperCase();
+
+        if (user !== target) {
+            allCorrect = false;
+        }
+    });
+
+    const words = getWordsAtCell(r, c)
+        .filter(w => w.direction === activeDirection);
+
+    words.forEach(word => {
+
+        const key =
+            `${word.id}-${word.direction}`;
+
+        if (allCorrect) {
+
+            if (!solvedWords.has(key)) {
+
+                solvedWords.add(key);
+
+                markSolved(word.id);
+            }
+
+        } else {
+
+            markFailed(word.id);
+        }
     });
 }
 
@@ -605,6 +699,14 @@ function revealWord() {
 
     const cells = getWordCells(r, c, activeDirection);
 
+    const words = getWordsAtCell(r, c);
+
+    words
+        .filter(w => w.direction === activeDirection)
+        .forEach(word => {
+            markRevealWord(word.id)
+        });
+
     cells.forEach(({ r, c }) => {
         const cell = document.querySelector(
             `.cell[data-row="${r}"][data-col="${c}"]`
@@ -613,6 +715,30 @@ function revealWord() {
         cell.value = (solutionGrid[r][c] || "").toUpperCase();
         cell.classList.add("correct");
     });
+}
+
+function showStats() {
+
+    const stats =
+        getStats();
+
+    let text = "";
+
+    Object.entries(stats)
+        .forEach(([id, s]) => {
+
+            text +=
+                `${id}
+Solved: ${s.solved}
+Failed: ${s.failed}
+Reveal word: ${s.revealWord}
+Reveal letter: ${s.revealLetter}
+Last seen: ${s.lastSeen}
+
+`;
+        });
+
+    alert(text);
 }
 
 function render(grid, placements) {
@@ -976,7 +1102,225 @@ function revealAll() {
         });
 }
 
+function getStats() {
+
+    const raw =
+        localStorage.getItem("wordStats");
+
+    console.log("raw", raw);
+    console.log("typeof raw =", typeof raw);
+
+    const parsed =
+        JSON.parse(raw || "{}");
+
+    console.log("parsed =", parsed);
+    console.log("parsed type =", typeof parsed);
+
+    return parsed;
+}
+
+function getStat(wordId) {
+
+    const stats = getStats();
+
+    console.log("stats =", stats);
+    console.log("type =", typeof stats);
+    console.log("array =", Array.isArray(stats));
+    console.log("keys =", Object.keys(stats));
+
+    console.log("before", wordId, stats[wordId]);
+
+    if (!stats[wordId]) {
+
+        stats[wordId] = {
+            solved: 0,
+            failed: 0,
+            revealWord: 0,
+            revealLetter: 0,
+            lastSeen: 0
+        };
+
+        console.log("created");
+
+        saveStats(stats);
+    }
+
+    console.log("after", stats[wordId]);
+
+    return stats[wordId];
+}
+
+function getPriority(word) {
+
+    const stats =
+        getStats();
+
+    const s =
+        stats[word.id] || {};
+
+    const solved =
+        s.solved || 0;
+
+    const failed =
+        s.failed || 0;
+
+    const revealWord =
+        s.revealWord || 0;
+
+    const revealLetter =
+        s.revealLetter || 0;
+
+    const lastSeen =
+        s.lastSeen || 0;
+
+    const daysSinceSeen =
+        (Date.now() - lastSeen)
+        / (1000 * 60 * 60 * 24);
+
+    return (
+        failed * 20
+        + revealWord * 30
+        + revealLetter * 5
+        - solved * 3
+        + Math.min(daysSinceSeen, 20)
+        + Math.random() * 10
+    );
+}
+
+function pickWeighted(words, count) {
+
+    const result = [];
+    const pool = [...words];
+
+    while (
+        result.length < count &&
+        pool.length > 0
+    ) {
+
+        const total =
+            pool.reduce(
+                (sum, w) => sum + w.score,
+                0
+            );
+
+        let r =
+            Math.random() * total;
+
+        let index = 0;
+
+        while (
+            r > pool[index].score
+        ) {
+            r -= pool[index].score;
+            index++;
+        }
+
+        result.push(
+            pool[index].word
+        );
+
+        pool.splice(index, 1);
+    }
+
+    return result;
+}
+
+function saveStats(stats) {
+
+    localStorage.setItem(
+        "wordStats",
+        JSON.stringify(stats)
+    );
+}
+
+function saveStat(wordId, stat) {
+
+    const stats =
+        getStats();
+
+    stats[wordId] = stat;
+
+    saveStats(stats);
+}
+
+function getWordStat(id) {
+
+    const stats = getStats();
+
+    if (!stats[id]) {
+
+        stats[id] = {
+            solved: 0,
+            failed: 0,
+            revealWord: 0,
+            revealLetter: 0,
+            lastSeen: 0
+        };
+
+        saveStats(stats);
+    }
+
+    return stats[id];
+}
+
+function incrementStat(wordId, field) {
+
+    const stat =
+        getStat(wordId);
+
+    console.log(
+        "wordId",
+        wordId,
+        "stat",
+        stat
+    );
+
+    stat[field] =
+        (stat[field] || 0) + 1;
+
+    saveStat(wordId, stat);
+}
+
+function markSolved(wordId) {
+
+    if (solvedWords.has(wordId)) {
+        return;
+    }
+
+    solvedWords.add(wordId);
+
+    incrementStat(wordId, "solved");
+}
+
+function markFailed(wordId) {
+
+    if (failedWords.has(wordId)) {
+        return;
+    }
+
+    failedWords.add(wordId);
+
+    incrementStat(wordId, "failed");
+}
+
+
+
+function markRevealWord(wordId) {
+
+    if (revealedWords.has(wordId)) {
+        return;
+    }
+
+    revealedWords.add(wordId);
+
+    incrementStat(wordId, "revealWord");
+}
+
 async function generate() {
+    failedWords.clear();
+    solvedWords.clear();
+    revealedWords.clear();
+    revealedLetters.clear();
 
     const vocab = 
         await getFilteredVocab()
@@ -987,24 +1331,28 @@ async function generate() {
             "mode"
         )
         .value;
+    
+    const scored =
+        vocab.map(word => ({
+            word,
+            score: getPriority(word)
+        }));
 
     const selected =
-        vocab
-        .slice()
-        .sort(
-            ()=>Math.random()-0.5
+        pickWeighted(
+            scored,
+            80
         )
-        .slice(0,80)
         .map(v => ({
+            id: v.id,
             clue: v.french,
             french: v.french,
             comment: v.comment,
             example: v.example,
             answer:
                 mode === "romaji"
-                ? v.romaji
-                    .toUpperCase()
-                : v.hiragana,
+                    ? v.romaji.toUpperCase()
+                    : v.hiragana,
             should_study: v.should_study
         }));
 
@@ -1012,6 +1360,17 @@ async function generate() {
         generateCrossword(
             selected
         );
+    
+    selected.forEach(word => {
+
+        const stat =
+            getStat(word.id);
+
+        stat.lastSeen =
+            Date.now();
+
+        saveStat(word.id, stat);
+    });
 
     render(
         crossword.grid,
