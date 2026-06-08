@@ -662,7 +662,12 @@ function render(grid, placements) {
 
             const input = document.createElement("input");
             input.className = "cell";
-            input.maxLength = 1;
+            input.autocomplete = "off";
+            input.autocorrect = "off";
+            input.autocapitalize = "off";
+            input.spellcheck = false;
+
+            // input.maxLength = 1;
 
             input.dataset.row = r;
             input.dataset.col = c;
@@ -683,19 +688,55 @@ function render(grid, placements) {
                 focusedCell = input;
             });
 
-            input.addEventListener("beforeinput", (e) => {
-                if (e.inputType && e.inputType.startsWith("insert")) {
-                    e.preventDefault();
+            input.addEventListener("input", (e) => {
 
-                    const key = e.data;
+                const value = e.target.value;
 
-                    if (!key) return;
+                if (!value) {
+                    return;
+                }
 
-                    e.target.value = key.toUpperCase();
+                const chars = [...input.value];
+                input.value = chars.slice(-1)[0] || "";
 
-                    moveNext(r, c, activeDirection);
+                e.target.value =
+                    chars[chars.length - 1].toUpperCase();
+
+                moveNext(r, c, activeDirection);
+            });
+
+            input.addEventListener("keydown", (e) => {
+
+                if (e.key !== "Backspace") {
+                    return;
+                }
+
+                if (input.value !== "") {
+                    return;
+                }
+
+                e.preventDefault();
+
+                let prevR = r;
+                let prevC = c;
+
+                if (activeDirection === "across") {
+                    prevC--;
+                } else {
+                    prevR--;
+                }
+
+                const prev =
+                    document.querySelector(
+                        `.cell[data-row="${prevR}"][data-col="${prevC}"]`
+                    );
+
+                if (prev) {
+                    prev.focus();
+                    prev.value = "";
                 }
             });
+
             wrapper.appendChild(number);
             wrapper.appendChild(input);
             rowDiv.appendChild(wrapper);
