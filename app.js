@@ -292,7 +292,7 @@ function placeWord(
     }
 }
 
-function generateCrossword(words) {
+function generateCrossword(words, maxwords) {
 
     const grid =
         createEmptyGrid();
@@ -338,6 +338,9 @@ function generateCrossword(words) {
         w < words.length;
         w++
     ) {
+        if (placements.length >= maxwords) {
+            break;
+        }
 
         const word =
             words[w];
@@ -1332,6 +1335,13 @@ async function generate() {
         )
         .value;
     
+    const maxWords =
+        Number(
+            document.getElementById(
+                "wordCount"
+            ).value
+        );
+    
     const scored =
         vocab.map(word => ({
             word,
@@ -1341,7 +1351,7 @@ async function generate() {
     const selected =
         pickWeighted(
             scored,
-            80
+            100
         )
         .map(v => ({
             id: v.id,
@@ -1358,7 +1368,8 @@ async function generate() {
 
     const crossword =
         generateCrossword(
-            selected
+            selected,
+            maxWords
         );
     
     selected.forEach(word => {
