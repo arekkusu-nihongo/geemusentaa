@@ -690,14 +690,15 @@ function render(grid, placements) {
 
             input.addEventListener("input", (e) => {
 
-                const value = e.target.value;
-
-                if (!value) {
+                if (e.isComposing) {
                     return;
                 }
 
-                const chars = [...input.value];
-                input.value = chars.slice(-1)[0] || "";
+                const chars = [...e.target.value];
+
+                if (chars.length === 0) {
+                    return;
+                }
 
                 e.target.value =
                     chars[chars.length - 1].toUpperCase();
