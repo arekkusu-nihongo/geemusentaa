@@ -108,3 +108,13 @@ body {
 
     box-sizing: border-box;
 }
+
+#crosswordContainer {
+    overflow-x: auto;
+    padding: 16px;
+}
+
+#crossword {
+    display: inline-block;
+    margin-right: 16px;
+}
