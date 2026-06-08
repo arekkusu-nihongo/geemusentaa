@@ -688,12 +688,19 @@ function render(grid, placements) {
                 focusedCell = input;
             });
 
-            input.maxLength = 1;
             input.addEventListener("input", (e) => {
 
-                if (!e.target.value) {
+                const value = e.target.value;
+
+                if (!value) {
                     return;
                 }
+
+                const chars = [...input.value];
+                input.value = chars.slice(-1)[0] || "";
+
+                e.target.value =
+                    chars[chars.length - 1].toUpperCase();
 
                 moveNext(r, c, activeDirection);
             });
