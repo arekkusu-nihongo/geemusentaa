@@ -87,6 +87,7 @@ while still remaining deployable as a static GitHub Pages site.
 - [ ] Add win detection (all cells correct)
 
 Other ideas:
+
 ### Track words that have been answered -> show them less often
 okok I will add an ID field so that we can keep count per ID (in case word ever change etc, less breakable).
 We should add a button to clear cache from page (reset word tracker).
@@ -94,6 +95,28 @@ We should add count only if user is able to translate the word I think.
 Maybe we should show the user what words he saw the most? Meh, feels unnecessary.
 
 
-### Afficher les mots en francais sur la droite quand on selectionne une rangée/colonne
-Pour éviter de devoir scroll.
+### Show French words on the side when selecting a row/column.
+To avoid scrolling every time.
 
+### Put white space on the right of the grid: otherwise, even if zooming out, it sucks on the phone.
+
+### Add an option to add a "difficulty": how many words in each grid
+
+### smartphone: hiraganas and romajis are doubly put -> TO FIX!!!
+
+### Erase should trigger going back to last cell and erasing the letter before
+Edge case if on last cell -> we remove last letter but do not move back unless we delete again
+
+### Make sure we can manually write hiraganas on the phone (handwriting)
+
+### Move on the grid using arrows
+
+### Show red/green color even when the word is selected (instead of yellow); or maybe half/half
+
+### Export to PDF with solutions in the second page
+
+### example/comment -> filter the word to translate (could be done in voc generation step?)
+
+### click on number in list of clues -> brings to the right cell?
+
+### Stats tracker: how many I solved
