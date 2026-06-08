@@ -688,24 +688,39 @@ function render(grid, placements) {
                 focusedCell = input;
             });
 
+            let justCommitted = false;
+
             input.addEventListener("input", (e) => {
 
-                // if (e.isComposing) {
-                //     return;
-                // }
+                if (justCommitted) {
+                    justCommitted = false;
+                    return;
+                }
 
-                const chars = [...e.target.value];
+                if (e.isComposing) {
+                    return;
+                }
+
+                finalizeInput();
+            });
+
+            input.addEventListener("compositionend", () => {
+                justCommitted = true;
+                finalizeInput();
+            });
+
+            function finalizeInput() {
+
+                const chars = [...input.value];
 
                 if (chars.length === 0) {
                     return;
                 }
 
-                e.target.value =
-                    chars[chars.length - 1].toUpperCase();
+                input.value = chars[chars.length - 1];
 
                 moveNext(r, c, activeDirection);
-            });
-
+            }
             input.addEventListener("keydown", (e) => {
 
                 if (e.key !== "Backspace") {
