@@ -690,9 +690,9 @@ function render(grid, placements) {
 
             input.addEventListener("input", (e) => {
 
-                if (e.isComposing) {
-                    return;
-                }
+                // if (e.isComposing) {
+                //     return;
+                // }
 
                 const chars = [...e.target.value];
 
