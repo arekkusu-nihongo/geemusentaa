@@ -66,6 +66,35 @@ document
     .getElementById("clearStatsBtn")
     .addEventListener("click", clearStats);
 
+document
+    .getElementById("exportPdfBtn")
+    .addEventListener(
+        "click",
+        exportPdf
+    );
+
+function prepareForPrint() {
+
+    document
+        .querySelectorAll(".cell")
+        .forEach(cell => {
+
+            const div =
+                document.createElement("div");
+
+            div.className =
+                "printCell";
+
+            div.textContent =
+                cell.value;
+
+            cell.style.display =
+                "none";
+
+            cell.parentNode.appendChild(div);
+        });
+}
+
 function clearStats() {
 
     if (
@@ -290,6 +319,169 @@ function placeWord(
 
         grid[r][c] = chars[i];
     }
+}
+
+function exportPdf() {
+
+    const puzzle =
+        buildGridHtml(false);
+
+    const solution =
+        buildGridHtml(true);
+
+    const clues =
+        document.getElementById("clueList")
+            .outerHTML;
+
+    const win =
+        window.open("", "_blank");
+
+    win.document.write(`
+        <html>
+        <head>
+            <title>Crossword</title>
+
+            <style>
+
+                body {
+                    font-family: sans-serif;
+                    margin: 20px;
+                }
+
+                .page {
+                    page-break-after: always;
+                }
+
+                .row {
+                    display: flex;
+                }
+
+                .cellWrapper {
+                    position: relative;
+                }
+
+                .cell,
+                .block {
+                    width: 30px;
+                    height: 30px;
+                    border: 1px solid black;
+                    box-sizing: border-box;
+                }
+
+                .cell {
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    font-size:18px;
+                }
+
+                .block {
+                    background:black;
+                }
+
+                .number {
+                    position:absolute;
+                    top:1px;
+                    left:2px;
+                    font-size:9px;
+                }
+
+                @media print {
+
+                    * {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+
+                    .block {
+                        background: black !important;
+                    }
+                }
+
+            </style>
+        </head>
+
+        <body>
+
+            <div class="page">
+                <h1>Puzzle</h1>
+                ${puzzle}
+                <h2>Clues</h2>
+                ${clues}
+            </div>
+
+            <div>
+                <h1>Solution</h1>
+                ${solution}
+            </div>
+
+        </body>
+        </html>
+    `);
+
+    win.document.close();
+
+    setTimeout(() => {
+        win.print();
+    }, 500);
+}
+
+function buildGridHtml(showSolution) {
+
+    const { minR, maxR, minC, maxC } =
+        getBounds(placedWords);
+
+    const numbering =
+        computeNumbering(
+            placedWords,
+            minR,
+            minC
+        );
+
+    let html = "";
+
+    for (let r = minR; r <= maxR; r++) {
+
+        html += `<div class="row">`;
+
+        for (let c = minC; c <= maxC; c++) {
+            const key =
+                `${r - minR},${c - minC}`;
+
+            const number =
+                numbering.get(key) || "";
+
+            if (solutionGrid[r][c] === null) {
+                html += `
+                    <div class="cellWrapper">
+                        <div class="block">█</div>
+                    </div>
+                `;
+                continue;
+            }
+
+            const value =
+                showSolution
+                    ? solutionGrid[r][c]
+                    : "";
+
+            html += `
+                <div class="cellWrapper">
+                    <div class="number">
+                        ${number}
+                    </div>
+
+                    <div class="cell">
+                        ${value}
+                    </div>
+                </div>
+            `;
+        }
+
+        html += `</div>`;
+    }
+
+    return html;
 }
 
 function generateCrossword(words, maxwords) {
