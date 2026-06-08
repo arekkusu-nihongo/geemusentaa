@@ -692,35 +692,18 @@ function render(grid, placements) {
 
             input.addEventListener("input", (e) => {
 
-                if (justCommitted) {
-                    justCommitted = false;
+                const chars = [...e.target.value];
+
+                if (chars.length <= 1) {
                     return;
                 }
 
-                if (e.isComposing) {
-                    return;
-                }
+                const last = chars[chars.length - 1];
 
-                finalizeInput();
-            });
-
-            input.addEventListener("compositionend", () => {
-                justCommitted = true;
-                finalizeInput();
-            });
-
-            function finalizeInput() {
-
-                const chars = [...input.value];
-
-                if (chars.length === 0) {
-                    return;
-                }
-
-                input.value = chars[chars.length - 1];
+                e.target.value = last;
 
                 moveNext(r, c, activeDirection);
-            }
+            });
             input.addEventListener("keydown", (e) => {
 
                 if (e.key !== "Backspace") {
