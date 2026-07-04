@@ -73,6 +73,18 @@ document
         exportPdf
     );
 
+document.addEventListener("click", (e) => {
+
+    if (
+        e.target.closest(".cell") ||
+        e.target.closest("#clueList")
+    ) {
+        return;
+    }
+
+    clearHighlight();
+});
+
 function prepareForPrint() {
 
     document
@@ -714,6 +726,16 @@ function highlightCells(cells) {
     });
 }
 
+function highlightPlacement(p) {
+    activeDirection = p.direction;
+
+    const cells = getWordCellsFromPlacement(p);
+
+    highlightCells(cells);
+
+    lastClicked = null;
+}
+
 function detectDirection(r, c) {
 
     let hasAcross = false;
@@ -1086,6 +1108,13 @@ function render(grid, placements) {
 
             clueText.textContent =
                 `${p.number}. ${dir} ${p.french}`;
+
+            // Make the clue clickable
+            clueText.style.cursor = "pointer";
+
+            clueText.addEventListener("click", () => {
+                highlightPlacement(p);
+            });
 
             li.appendChild(clueText);
 

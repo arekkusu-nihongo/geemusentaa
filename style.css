@@ -118,3 +118,11 @@ body {
     display: inline-block;
     margin-right: 16px;
 }
+
+#clueList > li > div:first-child {
+    cursor: pointer;
+}
+
+#clueList > li > div:first-child:hover {
+    text-decoration: underline;
+}
