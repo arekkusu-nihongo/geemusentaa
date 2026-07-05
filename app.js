@@ -1017,6 +1017,7 @@ function render(grid, placements) {
 
             input.addEventListener("focus", (e) => {
                 focusedCell = input;
+                input.select();
             });
 
             input.addEventListener("click", () => {
