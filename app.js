@@ -21,6 +21,14 @@ let selectedCell = null;
 let selectedCells = [];
 let lastClicked = null;
 
+let selectedCategories = new Set();
+
+const CATEGORY_STORAGE_KEY =
+    "selectedCategories";
+
+let allVocab = null;  // load only once the full vocab
+let allCategories = [];
+
 document
     .getElementById("generateBtn")
     .addEventListener("click", generate);
@@ -169,6 +177,10 @@ async function decryptRuntimeFile(buffer) {
 
 async function loadVocabulary() {
 
+    if (allVocab) {
+        return allVocab;
+    }
+
     const response =
         await fetch(
             "vocab.runtime.enc"
@@ -182,7 +194,121 @@ async function loadVocabulary() {
             buffer
         );
 
-    return JSON.parse(text);
+    allVocab =
+        JSON.parse(text);
+
+    allCategories =
+        [...new Set(
+            allVocab.map(
+                w => w.category
+            )
+        )].sort();
+
+    loadSelectedCategories(
+        allCategories
+    );
+
+    renderCategoryControls(
+        allCategories
+    );
+
+    return allVocab;
+}
+
+function renderCategoryControls(allCategories) {
+
+    const div =
+        document.getElementById(
+            "categoryControls"
+        );
+
+    div.innerHTML = "";
+
+    const buttons =
+        document.createElement("div");
+
+    buttons.className =
+        "categoryButtons";
+
+    const selectAll =
+        document.createElement("button");
+
+    selectAll.textContent =
+        "Tout sélectionner";
+
+    selectAll.onclick = () => {
+
+        selectedCategories =
+            new Set(allCategories);
+
+        saveSelectedCategories();
+
+        renderCategoryControls(
+            allCategories
+        );
+
+        generate();
+    };
+
+    buttons.appendChild(selectAll);
+
+    const unselectAll =
+        document.createElement("button");
+
+    unselectAll.textContent =
+        "Tout désélectionner";
+
+    unselectAll.onclick = () => {
+
+        selectedCategories.clear();
+
+        saveSelectedCategories();
+
+        renderCategoryControls(
+            allCategories
+        );
+
+        generate();
+    };
+
+    buttons.appendChild(unselectAll);
+
+    div.appendChild(buttons);
+
+    for (const cat of allCategories) {
+
+        const label =
+            document.createElement("label");
+
+        const cb =
+            document.createElement("input");
+
+        cb.type = "checkbox";
+
+        cb.checked =
+            selectedCategories.has(cat);
+
+        cb.onchange = () => {
+
+            if (cb.checked)
+                selectedCategories.add(cat);
+            else
+                selectedCategories.delete(cat);
+
+            saveSelectedCategories();
+
+            generate();
+        };
+
+        label.appendChild(cb);
+
+        label.append(
+            " " +
+            cat.replaceAll("_", " ")
+        );
+
+        div.appendChild(label);
+    }
 }
 
 async function getFilteredVocab() {
@@ -194,12 +320,14 @@ async function getFilteredVocab() {
     
     allVocab = await loadVocabulary()
 
-    if (includeKnown) {
-        return allVocab;
-    }
-
-    return allVocab.filter(
-        word => word.should_study
+    return allVocab.filter(word =>
+        selectedCategories.has(word.category)
+        &&
+        (
+            includeKnown
+            ||
+            word.should_study
+        )
     );
 }
 
@@ -1366,6 +1494,47 @@ function getStat(wordId) {
     return stats[wordId];
 }
 
+function loadSelectedCategories(allCategories) {
+
+    const raw =
+        localStorage.getItem(
+            CATEGORY_STORAGE_KEY
+        );
+
+    if (!raw) {
+
+        selectedCategories =
+            new Set(allCategories);
+
+        return;
+    }
+
+    try {
+
+        const saved =
+            JSON.parse(raw);
+
+        selectedCategories =
+            new Set(
+                saved.filter(
+                    c =>
+                        allCategories.includes(c)
+                )
+            );
+
+    } catch {
+
+        selectedCategories =
+            new Set(allCategories);
+    }
+
+    if (selectedCategories.size === 0) {
+
+        selectedCategories =
+            new Set(allCategories);
+    }
+}
+
 function getPriority(word) {
 
     const stats =
@@ -1457,6 +1626,16 @@ function saveStat(wordId, stat) {
     stats[wordId] = stat;
 
     saveStats(stats);
+}
+
+function saveSelectedCategories() {
+
+    localStorage.setItem(
+        CATEGORY_STORAGE_KEY,
+        JSON.stringify(
+            [...selectedCategories]
+        )
+    );
 }
 
 function getWordStat(id) {

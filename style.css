@@ -126,3 +126,20 @@ body {
 #clueList > li > div:first-child:hover {
     text-decoration: underline;
 }
+
+#categoryControls {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    margin-top: 8px;
+    margin-bottom: 16px;
+}
+
+.categoryButtons {
+    margin-bottom: 8px;
+}
+
+.categoryButtons button {
+    margin-right: 8px;
+}
