@@ -1017,13 +1017,6 @@ function render(grid, placements) {
 
             input.addEventListener("focus", (e) => {
                 focusedCell = input;
-
-                // highlight whole word instead of caret
-                const r = Number(input.dataset.row);
-                const c = Number(input.dataset.col);
-
-                const cells = getWordCells(r, c, activeDirection);
-                highlightCells(cells);
             });
 
             input.addEventListener("click", () => {
