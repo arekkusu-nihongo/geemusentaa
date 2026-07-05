@@ -1026,17 +1026,9 @@ function render(grid, placements) {
 
             input.addEventListener("input", (e) => {
 
-                const value = e.target.value;
+                if (!e.data) return;
 
-                if (!value) {
-                    return;
-                }
-
-                const chars = [...input.value];
-                input.value = chars.slice(-1)[0] || "";
-
-                e.target.value =
-                    chars[chars.length - 1].toUpperCase();
+                input.value = e.data.toUpperCase();
 
                 moveNext(r, c, activeDirection);
             });
