@@ -1244,7 +1244,7 @@ function render(grid, placements) {
                     document.createElement("button");
 
                 btn.textContent =
-                    "Show comment";
+                    "Montrer le commentaire";
 
                 const content =
                     document.createElement("div");
@@ -1268,8 +1268,8 @@ function render(grid, placements) {
 
                     btn.textContent =
                         visible
-                            ? "Show comment"
-                            : "Hide comment";
+                            ? "Montrer le commentaire"
+                            : "Cacher le commentaire";
                 });
 
                 li.appendChild(btn);
@@ -1282,7 +1282,7 @@ function render(grid, placements) {
                     document.createElement("button");
 
                 btn.textContent =
-                    "Show example";
+                    "Montrer l'exemple";
 
                 const content =
                     document.createElement("div");
@@ -1306,8 +1306,8 @@ function render(grid, placements) {
 
                     btn.textContent =
                         visible
-                            ? "Show example"
-                            : "Hide example";
+                            ? "Montrer l'exemple"
+                            : "Cacher l'exemple";
                 });
 
                 li.appendChild(btn);
