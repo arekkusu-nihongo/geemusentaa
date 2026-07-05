@@ -1043,6 +1043,12 @@ function render(grid, placements) {
 
             input.addEventListener("keydown", (e) => {
 
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    checkWord();
+                    return;
+                }
+
                 if (e.key !== "Backspace") {
                     return;
                 }
